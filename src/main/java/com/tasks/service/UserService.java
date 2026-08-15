@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.tasks.dto.ChangePasswordRequest;
 import com.tasks.dto.UpdateNameUser;
 import com.tasks.model.Label;
 import com.tasks.model.Task;
@@ -133,6 +134,9 @@ public class UserService {
 	
 	// Posts
 	public User createUser(User user) {
+		
+		 System.out.println("PASSWORD RECIBIDO: " + user.getPassword());
+		    System.out.println("EMAIL RECIBIDO: " + user.getEmail());
 	    user.setPassword(passwordEncoder.encode(user.getPassword()));
 	    return userRepository.save(user);
 	}
@@ -155,6 +159,38 @@ public class UserService {
 		userWithMyEmail.setEmail(newEmail);
 		return userRepository.save(userWithMyEmail);
 	};
+	
+	public void changePassword(
+	        ChangePasswordRequest request
+	    ) {
+			
+			User user = getAuthenticatedUser();
+
+	        if (!passwordEncoder.matches(
+	            request.getCurrentPassword(),
+	            user.getPassword()
+	        )) {
+	            throw new RuntimeException("La contraseña actual es incorrecta");
+	        }
+
+	        if (request.getNewPassword().equals(
+	            request.getCurrentPassword()
+	        )) {
+	            throw new RuntimeException("Las contraseña deben ser distintas");
+	        }
+
+	        if (request.getNewPassword().length() < 6) {
+	            throw new RuntimeException(
+	                "La contraseña debe tener al menos 6 caracteres"
+	            );
+	        }
+
+	        user.setPassword(
+	            passwordEncoder.encode(request.getNewPassword())
+	        );
+
+	        userRepository.save(user);
+	    }
 	
 	
 	//Deletes

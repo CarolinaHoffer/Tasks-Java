@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tasks.dto.ChangePasswordRequest;
 import com.tasks.dto.UpdateNameUser;
 import com.tasks.model.Task;
 import com.tasks.model.User;
@@ -74,6 +76,8 @@ public class UserController {
     // Posts
     @PostMapping
     public User createUser(@RequestBody User user) {
+    	System.out.println("PASSWORD RECIBIDO contr: " + user.getPassword());
+	    System.out.println("EMAIL RECIBIDO contr: " + user.getEmail());
         return userService.createUser(user);
     }
 
@@ -86,6 +90,14 @@ public class UserController {
     @PatchMapping("/email")
     public User updateEmailUser(@RequestBody String email) {
         return userService.updateEmailUser(email);
+    }
+    
+    @PatchMapping("/password")
+    public ResponseEntity<Void> changePassword(
+        @RequestBody ChangePasswordRequest request
+    ) {
+        userService.changePassword(request);
+        return ResponseEntity.noContent().build();
     }
 
     // Deletes

@@ -3,6 +3,7 @@ package com.tasks.service;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.tasks.dto.CreateTaskRequest;
 import com.tasks.dto.UpdateTaskRequest;
@@ -86,10 +87,12 @@ public class TaskService {
 	}
 	
 	//Updates
-	public Task updateTitleAndDescriptionTask(Long id, UpdateTaskRequest request ) {
+	public Task updateTitleAndDescriptionAndDueDateTimeTask(Long id, UpdateTaskRequest request ) {
 		Task task = getTaskFromAuthenticatedUser(id);
 		task.setTitle(request.getTitle());
 		task.setDescription(request.getDescription());
+		task.setDueDate(request.getDueDate());
+		task.setDueTime(request.getDueTime());
 		return taskRepository.save(task);
 	};
 	
@@ -101,12 +104,15 @@ public class TaskService {
 	
 	public Task updateLabelsTask(Long id, List<Long> labelIds) {
 
+	    System.out.println(labelIds);
+	    System.out.println(id);
+
 	    Task task = getTaskFromAuthenticatedUser(id);
 
 	    List<Label> labels = labelIds.stream()
 	        .map(labelId -> labelRepository.findByIdAndUser(labelId, task.getUser())
 	            .orElseThrow(() -> new RuntimeException("Label not found")))
-	        .toList();
+	        .collect(Collectors.toList());
 
 	    task.setLabels(labels);
 

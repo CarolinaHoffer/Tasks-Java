@@ -11,7 +11,7 @@ import com.tasks.model.User;
 
 public interface TaskRepository extends JpaRepository<Task, Long>  {
 
-	List<Task> findByUserId(Long userId);
+	List<Task> findByUserIdOrderByCreatedAtDesc(Long userId);
 	List<Task> findByUserAndLabelsContaining(User user, Label label);
     List<Task> findByUserAndDueDate(User user, LocalDate dueDate);
 }

@@ -48,7 +48,7 @@ public class TaskController {
 	// PUT
 	@PutMapping("/tasks/{id}")
 	public Task updateTitleAndDescriptionTask(@PathVariable Long id,  @RequestBody UpdateTaskRequest request){
-		return taskService.updateTitleAndDescriptionTask(id, request);
+		return taskService.updateTitleAndDescriptionAndDueDateTimeTask(id, request);
 	}
 	
 	//PATCH	
