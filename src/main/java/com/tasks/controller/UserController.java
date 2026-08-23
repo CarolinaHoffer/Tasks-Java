@@ -76,8 +76,6 @@ public class UserController {
     // Posts
     @PostMapping
     public User createUser(@RequestBody User user) {
-    	System.out.println("PASSWORD RECIBIDO contr: " + user.getPassword());
-	    System.out.println("EMAIL RECIBIDO contr: " + user.getEmail());
         return userService.createUser(user);
     }
 

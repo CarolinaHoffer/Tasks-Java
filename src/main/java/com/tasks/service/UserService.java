@@ -7,8 +7,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.tasks.constant.ErrorCode;
 import com.tasks.dto.ChangePasswordRequest;
 import com.tasks.dto.UpdateNameUser;
+import com.tasks.exception.BadRequestException;
 import com.tasks.model.Label;
 import com.tasks.model.Task;
 import com.tasks.model.User;
@@ -45,9 +47,11 @@ public class UserService {
 	        .getName();
 
 	    User user = userRepository.findByEmail(email)
-	        .orElseThrow(() -> new RuntimeException("User not found"));
+	        .orElseThrow(() -> new BadRequestException(
+        	        ErrorCode.USER_NOT_FOUND
+        	    )); 
 
-	    return user;
+	    return user; 
 	}
 	
 	// Gets
@@ -68,7 +72,9 @@ public class UserService {
 	public List<Task> getMyTasksByLabel(Long idLabel) {
 	    User user = getAuthenticatedUser();
 	    Label label = labelRepository.findByIdAndUser(idLabel, user)
-	    	    .orElseThrow(() -> new RuntimeException("Label not found"));
+	    	    .orElseThrow(() -> new BadRequestException(
+	        	        ErrorCode.LABEL_NOT_FOUND
+	        	    ));
 	    return taskRepository.findByUserAndLabelsContaining(user, label);
 	}
 	
@@ -134,9 +140,6 @@ public class UserService {
 	
 	// Posts
 	public User createUser(User user) {
-		
-		 System.out.println("PASSWORD RECIBIDO: " + user.getPassword());
-		    System.out.println("EMAIL RECIBIDO: " + user.getEmail());
 	    user.setPassword(passwordEncoder.encode(user.getPassword()));
 	    return userRepository.save(user);
 	}
@@ -154,7 +157,9 @@ public class UserService {
 				
 		userRepository.findByEmailAndIdNot(newEmail, userWithMyEmail.getId())
 	    .ifPresent(userWithEmail -> {
-	        throw new RuntimeException("This email is used.");
+	    	throw new BadRequestException(
+        	        ErrorCode.EMAIL_ALREADY_USED
+        	    );
 	    });
 		userWithMyEmail.setEmail(newEmail);
 		return userRepository.save(userWithMyEmail);
@@ -170,19 +175,23 @@ public class UserService {
 	            request.getCurrentPassword(),
 	            user.getPassword()
 	        )) {
-	            throw new RuntimeException("La contraseña actual es incorrecta");
+	        	throw new BadRequestException(
+	        	        ErrorCode.CURRENT_PASSWORD_INCORRECT
+	        	    );
 	        }
 
 	        if (request.getNewPassword().equals(
 	            request.getCurrentPassword()
 	        )) {
-	            throw new RuntimeException("Las contraseña deben ser distintas");
+	        	throw new BadRequestException(
+	        	        ErrorCode.PASSWORDS_MUST_BE_DIFFERENT
+	        	    );
 	        }
 
 	        if (request.getNewPassword().length() < 6) {
-	            throw new RuntimeException(
-	                "La contraseña debe tener al menos 6 caracteres"
-	            );
+	        	throw new BadRequestException(
+	        	        ErrorCode.PASSWORD_TOO_SHORT
+	        	    );
 	        }
 
 	        user.setPassword(

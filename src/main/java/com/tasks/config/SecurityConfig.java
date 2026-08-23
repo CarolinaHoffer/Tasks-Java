@@ -14,6 +14,10 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.tasks.auth.JwtAuthenticationFilter;
+import com.tasks.constant.ErrorCode;
+import com.tasks.exception.ErrorResponse;
+
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 public class SecurityConfig {
@@ -63,7 +67,38 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**", "/users").permitAll()
                 .anyRequest().authenticated()
-            )
+            ).exceptionHandling(exception -> exception
+            	    .accessDeniedHandler((request, response, ex) -> {
+            	        ErrorCode error = ErrorCode.ACCESS_FORBIDDEN;
+            	        response.setStatus(error.getStatus().value());
+            	        response.setContentType("application/json");
+
+            	        response.getWriter().write(
+            	            new ObjectMapper().writeValueAsString(
+            	                new ErrorResponse(
+            	                    error.getCode(),
+            	                    error.getMessage()
+            	                )
+            	            )
+            	        );
+            	    })
+            	    .authenticationEntryPoint((request, response, ex) -> {
+
+            	        ErrorCode error = ErrorCode.UNAUTHORIZED;
+
+            	        response.setStatus(error.getStatus().value());
+            	        response.setContentType("application/json");
+
+            	        response.getWriter().write(
+            	            new ObjectMapper().writeValueAsString(
+            	                new ErrorResponse(
+            	                    error.getCode(),
+            	                    error.getMessage()
+            	                )
+            	            )
+            	        );
+            	    })
+            	)
             .addFilterBefore(
                 jwtAuthenticationFilter,
                 UsernamePasswordAuthenticationFilter.class

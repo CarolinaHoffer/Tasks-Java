@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.tasks.constant.ErrorCode;
 import com.tasks.dto.CreateTaskRequest;
 import com.tasks.dto.UpdateTaskRequest;
 import com.tasks.dto.UpdateTaskStatusRequest;
+import com.tasks.exception.BadRequestException;
 import com.tasks.model.Label;
 import com.tasks.model.Task;
 import com.tasks.model.User;
@@ -39,13 +41,18 @@ public class TaskService {
 	        .getName();
 
 	    User user = userRepository.findByEmail(email)
-	        .orElseThrow(() -> new RuntimeException("User not found"));
+	        .orElseThrow(() -> new BadRequestException(
+        	        	ErrorCode.USER_NOT_FOUND
+            	    ));
 
 	    Task task = taskRepository.findById(taskId)
-	        .orElseThrow(() -> new RuntimeException("Task not found"));
-
+	        .orElseThrow(() -> new BadRequestException(
+    	        	ErrorCode.TASK_NOT_FOUND
+        	    ));
 	    if (!task.getUser().getId().equals(user.getId())) {
-	        throw new RuntimeException("Task does not belong to user");
+	        throw new BadRequestException(
+    	        	ErrorCode.TASK_ACCESS_FORBIDDEN
+        	    );
 	    }
 
 	    return task;
@@ -56,8 +63,8 @@ public class TaskService {
 	    return taskRepository.findAll();
 	}
 	
-	public Optional<Task> getTask(Long id) {
-		return taskRepository.findById(id);
+	public Task getTask(Long id) {
+		return getTaskFromAuthenticatedUser(id);
 	};
 	
 	// Posts
@@ -69,14 +76,18 @@ public class TaskService {
 	        .getName();
 
 	    User user = userRepository.findByEmail(email)
-	        .orElseThrow(() -> new RuntimeException("User not found"));
+	        .orElseThrow(() -> new BadRequestException(
+        	        ErrorCode.USER_NOT_FOUND
+            	    ));
 
 	    Task newTask = new Task(taskReq.getTitle(), taskReq.getDescription(), user);
 
 	    List<Long> labelIds = taskReq.getLabelIds();
 	    List<Label> labels = labelIds.stream()
 		        .map(labelId -> labelRepository.findByIdAndUser(labelId, user)
-		            .orElseThrow(() -> new RuntimeException("Label not found")))
+		            .orElseThrow(() -> new BadRequestException(
+		        	        ErrorCode.LABEL_NOT_FOUND
+		            	    )))
 		        .toList();
 	    newTask.setLabels(labels);
 	    newTask.setDueDate(taskReq.getDueDate());
@@ -104,14 +115,13 @@ public class TaskService {
 	
 	public Task updateLabelsTask(Long id, List<Long> labelIds) {
 
-	    System.out.println(labelIds);
-	    System.out.println(id);
-
 	    Task task = getTaskFromAuthenticatedUser(id);
 
 	    List<Label> labels = labelIds.stream()
 	        .map(labelId -> labelRepository.findByIdAndUser(labelId, task.getUser())
-	            .orElseThrow(() -> new RuntimeException("Label not found")))
+	            .orElseThrow(() -> new BadRequestException(
+	        	        ErrorCode.LABEL_NOT_FOUND
+	            	    )))
 	        .collect(Collectors.toList());
 
 	    task.setLabels(labels);

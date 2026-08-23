@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.tasks.constant.ErrorCode;
+import com.tasks.exception.BadRequestException;
 import com.tasks.model.Label;
 import com.tasks.model.Task;
 import com.tasks.model.User;
@@ -40,7 +42,9 @@ public class LabelService {
             .getName();
 
         return userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new BadRequestException(
+    	        	ErrorCode.USER_NOT_FOUND
+        	    ));
     }
 
     // Gets
@@ -55,7 +59,9 @@ public class LabelService {
         User user = getAuthenticatedUser();
 
         return labelRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new RuntimeException("Label not found"));
+            .orElseThrow(() -> new BadRequestException(
+    	        	ErrorCode.LABEL_NOT_FOUND
+        	    ));
     }
 
     // Posts
@@ -66,7 +72,9 @@ public class LabelService {
 
         labelRepository.findByNameAndUser(label.getName(), user)
             .ifPresent(existingLabel -> {
-                throw new RuntimeException("This label already exists.");
+                throw new BadRequestException(
+        	        	ErrorCode.LABEL_ALREADY_EXISTS
+                	    );
             });
 
         label.setUser(user);
@@ -81,7 +89,9 @@ public class LabelService {
         User user = getAuthenticatedUser();
 
         Label label = labelRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new RuntimeException("Label not found"));
+            .orElseThrow(() -> new BadRequestException(
+    	        	ErrorCode.LABEL_NOT_FOUND
+        	    ));
 
         label.setName(request.getName());
         label.setColor(request.getColor());
@@ -97,7 +107,9 @@ public class LabelService {
         User user = getAuthenticatedUser();
 
         Label label = labelRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new RuntimeException("Label not found"));
+            .orElseThrow(() -> new BadRequestException(
+    	        	ErrorCode.LABEL_NOT_FOUND
+        	    ));
         
         List<Task> tasks = taskRepository.findByUserAndLabelsContaining(user, label);
 

@@ -3,6 +3,8 @@ package com.tasks.auth;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.tasks.constant.ErrorCode;
+import com.tasks.exception.BadRequestException;
 import com.tasks.model.User;
 import com.tasks.repository.UserRepository;
 
@@ -26,10 +28,14 @@ public class AuthService {
     public String login(String email, String password) {
 
         User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+            .orElseThrow(() -> new BadRequestException(
+        	        ErrorCode.INVALID_CREDENTIALS
+        	    ));
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+        if (!passwordEncoder.matches(password, user.getPassword())) {  
+            throw new BadRequestException(
+        	        ErrorCode.INVALID_CREDENTIALS
+        	    );
         }
 
         return jwtService.generateToken(user.getEmail());

@@ -1,7 +1,6 @@
 package com.tasks.controller;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,18 +10,24 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tasks.constant.ErrorCode;
 import com.tasks.dto.CreateTaskRequest;
 import com.tasks.dto.UpdateTaskRequest;
 import com.tasks.dto.UpdateTaskStatusRequest;
+import com.tasks.exception.BadRequestException;
 import com.tasks.model.Task;
 import com.tasks.service.TaskService;
+import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 public class TaskController {
 
 	private final TaskService taskService;
+	@Value("${admin.password}")
+	private String adminPassword;
 	
 	public TaskController(TaskService taskService) {
 		this.taskService = taskService;
@@ -35,13 +40,21 @@ public class TaskController {
 	}
 	
 	// GET
-	@GetMapping("/tasks")
-	public List<Task> getAllTasks() {
-	    return taskService.getAllTasks();
-	}
+	 @GetMapping("/tasks")
+	    public List<Task> getAllTasks(
+	    		@RequestHeader(value = "X-Tasks-Admin-Password", required = false)
+	    	    String password
+	    ) {
+		 if (!adminPassword.equals(password)) {
+		        throw new BadRequestException(
+		            ErrorCode.INVALID_ADMIN_PASSWORD
+		        );
+		    }
+		 return taskService.getAllTasks();
+	    }
 	
 	@GetMapping("/tasks/{id}")
-	public Optional<Task> getTaskById(@PathVariable Long id){
+	public Task getTaskById(@PathVariable Long id){
 		return taskService.getTask(id);
 	}
 	
